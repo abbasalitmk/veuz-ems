@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Dashboard</h2>
+<p class="text-muted">Welcome, {{ user.username }}</p>
+
+<div class="row mt-4">
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Forms</h5>
+                <p class="card-text">Create and manage form templates</p>
+                <a href="{% url 'form_create' %}" class="btn btn-primary">Create Form</a>
+                <a href="{% url 'form_list' %}" class="btn btn-outline-secondary">View All</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Employees</h5>
+                <p class="card-text">Add and manage employees</p>
+                <a href="{% url 'employee_create' %}" class="btn btn-success">Add Employee</a>
+                <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

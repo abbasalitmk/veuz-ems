@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Employee{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Add Employee</h2>
+    <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">Back</a>
+</div>
+
+{% if not form_templates %}
+<div class="alert alert-warning">
+    No form templates yet. <a href="{% url 'form_create' %}">Create a form first</a>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">Select Form</div>
+            <div class="card-body">
+                <select class="form-select" id="formTemplateSelect">
+                    <option value="">Choose form...</option>
+                    {% for form in form_templates %}
+                    <option value="{{ form.id }}" {% if selected_template and selected_template.id == form.id %}selected{% endif %}>{{ form.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">Employee Details</div>
+            <div class="card-body">
+                {% if selected_template %}
+                <form id="employeeForm">
+                    {% for field in selected_template.fields.all %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}{% if field.required %} *{% endif %}</label>
+                        {% if field.field_type == 'text' %}
+                        <input type="text" class="form-control" id="field_{{ field.id }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'number' %}
+                        <input type="number" class="form-control" id="field_{{ field.id }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'email' %}
+                        <input type="email" class="form-control" id="field_{{ field.id }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'password' %}
+                        <input type="password" class="form-control" id="field_{{ field.id }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'date' %}
+                        <input type="date" class="form-control" id="field_{{ field.id }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'textarea' %}
+                        <textarea class="form-control" id="field_{{ field.id }}" rows="3" {% if field.required %}required{% endif %}></textarea>
+                        {% elif field.field_type == 'select' %}
+                        <select class="form-select" id="field_{{ field.id }}" {% if field.required %}required{% endif %}>
+                            <option value="">Select...</option>
+                            {% for option in field.options %}
+                            <option value="{{ option }}">{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </form>
+                {% else %}
+                <p class="text-muted">Select a form template to show the fields.</p>
+                {% endif %}
+            </div>
+            {% if selected_template %}
+            <div class="card-footer">
+                <button class="btn btn-primary" onclick="saveEmployee()" id="saveBtn">Save Employee</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedTemplateId = {{ selected_template.id|default:'null' }};
+
+document.getElementById('formTemplateSelect')?.addEventListener('change', function() {
+    if (this.value) {
+        window.location.href = `{% url 'employee_create' %}?template=${this.value}`;
+    }
+});
+
+function saveEmployee() {
+    const form = document.getElementById('employeeForm');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    const fieldValues = {};
+    let isValid = true;
+    
+    inputs.forEach(input => {
+        const fieldId = input.id.replace('field_', '');
+        fieldValues[fieldId] = input.value;
+        
+        if (input.required && !input.value) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!isValid) {
+        showToast('Fill all required fields', 'warning');
+        return;
+    }
+    
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    
+    fetch('{% url "employee_create" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            form_template: selectedTemplateId,
+            field_values: fieldValues
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '{% url "employee_list" %}';
+        } else {
+            showToast(data.message || 'Save failed', 'danger');
+            btn.disabled = false;
+            btn.textContent = 'Save Employee';
+        }
+    });
+}
+</script>
+{% endblock %}

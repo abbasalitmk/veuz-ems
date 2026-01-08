@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Employee #{{ employee.id }}</h2>
+    <div>
+        <a href="{% url 'employee_edit' employee.id %}" class="btn btn-primary">Edit</a>
+        <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Details</div>
+            <div class="card-body">
+                <table class="table">
+                    <tbody>
+                        {% for fv in field_values %}
+                        <tr>
+                            <th style="width: 30%;">{{ fv.form_field.label }}</th>
+                            <td>{{ fv.value|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-muted">No data</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Info</div>
+            <div class="card-body">
+                <p><strong>Form:</strong> {{ employee.form_template.name }}</p>
+                <p><strong>Created:</strong> {{ employee.created_at|date:"M d, Y H:i" }}</p>
+                <p><strong>Updated:</strong> {{ employee.updated_at|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

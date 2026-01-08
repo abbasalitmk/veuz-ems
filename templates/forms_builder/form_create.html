@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Form{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Create Form Template</h2>
+    <a href="{% url 'form_list' %}" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">Form Settings</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Form Name *</label>
+                    <input type="text" class="form-control" id="formName" placeholder="e.g., Employee Registration">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="formDescription" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Add Field</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Label *</label>
+                    <input type="text" class="form-control" id="fieldLabel" placeholder="e.g., Full Name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" id="fieldType">
+                        <option value="text">Text</option>
+                        <option value="number">Number</option>
+                        <option value="email">Email</option>
+                        <option value="password">Password</option>
+                        <option value="date">Date</option>
+                        <option value="textarea">Text Area</option>
+                        <option value="select">Select/Dropdown</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="optionsGroup" style="display: none;">
+                    <label class="form-label">Options (comma-separated)</label>
+                    <input type="text" class="form-control" id="fieldOptions" placeholder="Option1, Option2">
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="fieldRequired">
+                    <label class="form-check-label" for="fieldRequired">Required</label>
+                </div>
+                <button class="btn btn-outline-primary w-100" onclick="addField()">Add Field</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span>Form Fields</span>
+                <span class="badge bg-secondary" id="fieldCount">0 fields</span>
+            </div>
+            <div class="card-body">
+                <div id="emptyState" class="text-center text-muted py-4">
+                    Add fields using the panel on the left. You can drag to reorder.
+                </div>
+                <div id="fieldsList" class="d-none"></div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary" onclick="saveForm()" id="saveBtn">Save Form</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let fields = [];
+
+document.getElementById('fieldType').addEventListener('change', function() {
+    document.getElementById('optionsGroup').style.display = this.value === 'select' ? 'block' : 'none';
+});
+
+function addField() {
+    const label = document.getElementById('fieldLabel').value.trim();
+    const type = document.getElementById('fieldType').value;
+    const required = document.getElementById('fieldRequired').checked;
+    const optionsInput = document.getElementById('fieldOptions').value.trim();
+    
+    if (!label) {
+        showToast('Enter field label', 'warning');
+        return;
+    }
+    
+    let options = null;
+    if (type === 'select' && optionsInput) {
+        options = optionsInput.split(',').map(o => o.trim()).filter(o => o);
+    }
+    
+    fields.push({ id: Date.now(), label, field_type: type, required, options });
+    renderFields();
+    
+    document.getElementById('fieldLabel').value = '';
+    document.getElementById('fieldOptions').value = '';
+    document.getElementById('fieldRequired').checked = false;
+}
+
+function renderFields() {
+    const container = document.getElementById('fieldsList');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (fields.length === 0) {
+        container.classList.add('d-none');
+        emptyState.classList.remove('d-none');
+        document.getElementById('fieldCount').textContent = '0 fields';
+        return;
+    }
+    
+    container.classList.remove('d-none');
+    emptyState.classList.add('d-none');
+    document.getElementById('fieldCount').textContent = `${fields.length} fields`;
+    
+    container.innerHTML = fields.map((field, i) => `
+        <div class="card mb-2" data-id="${field.id}">
+            <div class="card-body py-2 d-flex align-items-center">
+                <i class="bi bi-grip-vertical me-2 drag-handle" style="cursor: grab;"></i>
+                <div class="flex-grow-1">
+                    <strong>${field.label}</strong>
+                    <small class="text-muted ms-2">${field.field_type}</small>
+                    ${field.required ? '<span class="badge bg-danger ms-2">Required</span>' : ''}
+                </div>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeField(${field.id})">Remove</button>
+            </div>
+        </div>
+    `).join('');
+    
+    new Sortable(container, {
+        animation: 150,
+        handle: '.drag-handle',
+        onEnd: function(evt) {
+            const moved = fields.splice(evt.oldIndex, 1)[0];
+            fields.splice(evt.newIndex, 0, moved);
+        }
+    });
+}
+
+function removeField(id) {
+    fields = fields.filter(f => f.id !== id);
+    renderFields();
+}
+
+function saveForm() {
+    const name = document.getElementById('formName').value.trim();
+    const description = document.getElementById('formDescription').value.trim();
+    
+    if (!name) {
+        showToast('Enter form name', 'warning');
+        return;
+    }
+    
+    if (fields.length === 0) {
+        showToast('Add at least one field', 'warning');
+        return;
+    }
+    
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    
+    fetch('{% url "form_create" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            name,
+            description,
+            fields: fields.map((f, i) => ({
+                label: f.label,
+                field_type: f.field_type,
+                required: f.required,
+                options: f.options,
+                order: i
+            }))
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '{% url "form_list" %}';
+        } else {
+            showToast(data.message || 'Save failed', 'danger');
+            btn.disabled = false;
+            btn.textContent = 'Save Form';
+        }
+    });
+}
+</script>
+{% endblock %}

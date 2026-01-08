@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load employee_tags %}
+
+{% block title %}Edit Employee{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Edit Employee #{{ employee.id }}</h2>
+    <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Edit Details</div>
+            <div class="card-body">
+                <form id="employeeForm">
+                    {% for field in employee.form_template.fields.all %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}{% if field.required %} *{% endif %}</label>
+                        {% with field_value=field_values|get_item:field.id %}
+                        {% if field.field_type == 'text' %}
+                        <input type="text" class="form-control" id="field_{{ field.id }}" value="{{ field_value|default:'' }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'number' %}
+                        <input type="number" class="form-control" id="field_{{ field.id }}" value="{{ field_value|default:'' }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'email' %}
+                        <input type="email" class="form-control" id="field_{{ field.id }}" value="{{ field_value|default:'' }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'password' %}
+                        <input type="password" class="form-control" id="field_{{ field.id }}" value="{{ field_value|default:'' }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'date' %}
+                        <input type="date" class="form-control" id="field_{{ field.id }}" value="{{ field_value|default:'' }}" {% if field.required %}required{% endif %}>
+                        {% elif field.field_type == 'textarea' %}
+                        <textarea class="form-control" id="field_{{ field.id }}" rows="3" {% if field.required %}required{% endif %}>{{ field_value|default:'' }}</textarea>
+                        {% elif field.field_type == 'select' %}
+                        <select class="form-select" id="field_{{ field.id }}" {% if field.required %}required{% endif %}>
+                            <option value="">Select...</option>
+                            {% for option in field.options %}
+                            <option value="{{ option }}" {% if option == field_value %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    {% endfor %}
+                </form>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary" onclick="updateEmployee()" id="saveBtn">Update</button>
+                <a href="{% url 'employee_detail' employee.id %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateEmployee() {
+    const form = document.getElementById('employeeForm');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    const fieldValues = {};
+    let isValid = true;
+    
+    inputs.forEach(input => {
+        const fieldId = input.id.replace('field_', '');
+        fieldValues[fieldId] = input.value;
+        
+        if (input.required && !input.value) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!isValid) {
+        showToast('Fill all required fields', 'warning');
+        return;
+    }
+    
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    
+    fetch('/employees/{{ employee.id }}/edit/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ field_values: fieldValues })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '{% url "employee_detail" employee.id %}';
+        } else {
+            showToast(data.message || 'Update failed', 'danger');
+            btn.disabled = false;
+            btn.textContent = 'Update';
+        }
+    });
+}
+</script>
+{% endblock %}

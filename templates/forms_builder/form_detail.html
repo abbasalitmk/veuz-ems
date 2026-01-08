@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ form_template.name }} - Employee Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">{{ form_template.name }}</h2>
+        <p class="text-muted mb-0">{{ form_template.description|default:"No description" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'employee_create' %}?template={{ form_template.id }}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-2"></i>Add Employee
+        </a>
+        <a href="{% url 'form_edit' form_template.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-pencil me-2"></i>Edit Form
+        </a>
+        <a href="{% url 'form_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-list-ul me-2"></i>Form Fields ({{ form_template.fields.count }})</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Label</th>
+                        <th>Type</th>
+                        <th>Placeholder</th>
+                        <th>Required</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in form_template.fields.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ field.label }}</strong></td>
+                        <td><span class="badge bg-secondary-subtle text-secondary">{{ field.get_field_type_display }}</span></td>
+                        <td><small class="text-muted">{{ field.placeholder|default:"-" }}</small></td>
+                        <td>
+                            {% if field.required %}
+                            <span class="badge bg-danger-subtle text-danger">Required</span>
+                            {% else %}
+                            <span class="text-muted">Optional</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No fields defined</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

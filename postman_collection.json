@@ -1,0 +1,481 @@
+{
+    "info": {
+        "name": "Employee Management System API",
+        "description": "REST API collection for Employee Management System with JWT authentication.\n\nBase URL: http://127.0.0.1:8000",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://127.0.0.1:8000"
+        },
+        {
+            "key": "accessToken",
+            "value": ""
+        },
+        {
+            "key": "refreshToken",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"password\": \"TestPass123!\",\n    \"password2\": \"TestPass123!\",\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "register", ""]
+                        },
+                        "description": "Register a new user account"
+                    }
+                },
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.tokens) {",
+                                    "    pm.collectionVariables.set('accessToken', jsonData.tokens.access);",
+                                    "    pm.collectionVariables.set('refreshToken', jsonData.tokens.refresh);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"TestPass123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login", ""]
+                        },
+                        "description": "Login with username and password to get JWT tokens"
+                    }
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"refresh\": \"{{refreshToken}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/token/refresh/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "token", "refresh", ""]
+                        },
+                        "description": "Refresh the access token using refresh token"
+                    }
+                },
+                {
+                    "name": "Get Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/profile/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "profile", ""]
+                        },
+                        "description": "Get current user profile"
+                    }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"first_name\": \"Updated\",\n    \"last_name\": \"Name\",\n    \"phone\": \"1234567890\",\n    \"address\": \"123 Main St\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/profile/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "profile", ""]
+                        },
+                        "description": "Update user profile"
+                    }
+                },
+                {
+                    "name": "Change Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"old_password\": \"TestPass123!\",\n    \"new_password\": \"NewPass456!\",\n    \"new_password2\": \"NewPass456!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/change-password/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "change-password", ""]
+                        },
+                        "description": "Change user password"
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"refresh\": \"{{refreshToken}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/logout/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "logout", ""]
+                        },
+                        "description": "Logout and blacklist refresh token"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Form Templates",
+            "item": [
+                {
+                    "name": "List Form Templates",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/forms/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "forms", ""]
+                        },
+                        "description": "Get all form templates"
+                    }
+                },
+                {
+                    "name": "Create Form Template",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Employee Registration Form\",\n    \"description\": \"Standard employee registration form\",\n    \"fields\": [\n        {\n            \"label\": \"Full Name\",\n            \"field_type\": \"text\",\n            \"placeholder\": \"Enter full name\",\n            \"required\": true,\n            \"order\": 0\n        },\n        {\n            \"label\": \"Email\",\n            \"field_type\": \"email\",\n            \"placeholder\": \"Enter email address\",\n            \"required\": true,\n            \"order\": 1\n        },\n        {\n            \"label\": \"Phone\",\n            \"field_type\": \"number\",\n            \"placeholder\": \"Enter phone number\",\n            \"required\": false,\n            \"order\": 2\n        },\n        {\n            \"label\": \"Date of Birth\",\n            \"field_type\": \"date\",\n            \"required\": false,\n            \"order\": 3\n        },\n        {\n            \"label\": \"Department\",\n            \"field_type\": \"select\",\n            \"options\": [\"HR\", \"Engineering\", \"Marketing\", \"Sales\"],\n            \"required\": true,\n            \"order\": 4\n        }\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/forms/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "forms", ""]
+                        },
+                        "description": "Create a new form template with dynamic fields"
+                    }
+                },
+                {
+                    "name": "Get Form Template",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/forms/1/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "forms", "1", ""]
+                        },
+                        "description": "Get a specific form template by ID"
+                    }
+                },
+                {
+                    "name": "Update Form Template",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Employee Form\",\n    \"description\": \"Updated description\",\n    \"fields\": [\n        {\n            \"label\": \"Full Name\",\n            \"field_type\": \"text\",\n            \"required\": true,\n            \"order\": 0\n        },\n        {\n            \"label\": \"Email Address\",\n            \"field_type\": \"email\",\n            \"required\": true,\n            \"order\": 1\n        }\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/forms/1/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "forms", "1", ""]
+                        },
+                        "description": "Update a form template"
+                    }
+                },
+                {
+                    "name": "Delete Form Template",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/forms/1/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "forms", "1", ""]
+                        },
+                        "description": "Delete a form template"
+                    }
+                },
+                {
+                    "name": "Reorder Form Fields",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"field_order\": [3, 1, 2]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/forms/1/reorder/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "forms", "1", "reorder", ""]
+                        },
+                        "description": "Reorder fields within a form template"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Employees",
+            "item": [
+                {
+                    "name": "List Employees",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/employees/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "employees", ""]
+                        },
+                        "description": "Get all employees"
+                    }
+                },
+                {
+                    "name": "List Employees with Search",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/employees/?search=john&form_template=1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "employees", ""],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "john"
+                                },
+                                {
+                                    "key": "form_template",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Search and filter employees"
+                    }
+                },
+                {
+                    "name": "Create Employee",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"form_template\": 1,\n    \"field_values\": {\n        \"1\": \"John Doe\",\n        \"2\": \"john.doe@example.com\",\n        \"3\": \"1234567890\",\n        \"4\": \"1990-05-15\",\n        \"5\": \"Engineering\"\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/employees/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "employees", ""]
+                        },
+                        "description": "Create a new employee using a form template"
+                    }
+                },
+                {
+                    "name": "Get Employee",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/employees/1/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "employees", "1", ""]
+                        },
+                        "description": "Get a specific employee by ID"
+                    }
+                },
+                {
+                    "name": "Update Employee",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"form_template\": 1,\n    \"field_values\": {\n        \"1\": \"John Updated Doe\",\n        \"2\": \"john.updated@example.com\",\n        \"3\": \"9876543210\",\n        \"4\": \"1990-05-15\",\n        \"5\": \"HR\"\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/employees/1/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "employees", "1", ""]
+                        },
+                        "description": "Update an employee's field values"
+                    }
+                },
+                {
+                    "name": "Delete Employee",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/employees/1/",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "employees", "1", ""]
+                        },
+                        "description": "Delete an employee"
+                    }
+                }
+            ]
+        }
+    ]
+}
